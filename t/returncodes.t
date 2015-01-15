@@ -23,4 +23,10 @@ test_expect_success 'one positional arg fails' '
   test_must_fail txtcmp foo
 '
 
+test_expect_success 'nonexistent file failure' '
+  echo "notexist1: No such file or directory" >expected &&
+  txtcmp notexist1 notexist2 2>actual &&
+  test_cmp expected actual
+'
+
 test_done
