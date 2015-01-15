@@ -155,11 +155,10 @@ lcs_length(hash_t *buf1, size_t buflen1, hash_t *buf2, size_t buflen2)
         }
         this_row[j] = (lookup1 > lookup2) ? lookup1 : lookup2;
       }
-
-      swap = this_row;
-      this_row = last_row;
-      last_row = swap;
     }
+    swap = this_row;
+    this_row = last_row;
+    last_row = swap;
   }
 
   result = last_row[buflen2 - 1];
