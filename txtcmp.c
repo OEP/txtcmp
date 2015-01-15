@@ -90,7 +90,7 @@ hash_files(const char *const* filenames, hash_t **hashes, size_t length)
   for(i = 0; i < length; ++i) {
     FILE *fp = fopen(filenames[i], "r");
     if(fp == NULL) {
-      perror("fopen()");
+      perror(filenames[i]);
       exit(EXIT_FAILURE);
     }
     hash_file(fp, &hashes[i]);
