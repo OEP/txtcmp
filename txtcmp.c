@@ -221,6 +221,10 @@ int main(int argc, char **argv)
     }
   }
 
+
+  for(i = 0; i < count; i++) {
+    free(hashes[i]);
+  }
   free(hashes);
   exit(EXIT_SUCCESS);
 }
