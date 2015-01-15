@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <errno.h>
+#include <assert.h>
 #define PROG "txtcmp"
 #define VERSION "0.1.0"
 
@@ -97,8 +98,88 @@ hash_files(const char *const* filenames, hash_t **hashes, size_t length)
   }
 }
 
+unsigned long
+lcs_length(hash_t *buf1, size_t buflen1, hash_t *buf2, size_t buflen2)
+{
+  size_t i, j;
+  unsigned long *swap, *this_row, *last_row, lookup1, lookup2, result;
+  hash_t h1, h2;
+
+  if(buf1[0] == 0 && buf2[0] == 0) {
+    return 0;
+  }
+
+  // Make sure buf2 is the smaller buffer (to allocate less memory).
+  if(buflen2 > buflen1) {
+    size_t tmplen;
+    hash_t *tmpbuf;
+
+    tmpbuf = buf1;
+    tmplen = buflen1;
+    buf1 = buf2;
+    buflen1 = buflen2;
+    buf2 = tmpbuf;
+    buflen2 = tmplen;
+  }
+
+  if((this_row = malloc(buflen2 * sizeof(unsigned long))) == NULL) {
+    perror("malloc()");
+    exit(EXIT_FAILURE);
+  }
+
+  if((last_row = malloc(buflen2 * sizeof(unsigned long))) == NULL) {
+    perror("malloc()");
+    exit(EXIT_FAILURE);
+  }
+
+  for(i = 0; i < buflen1; i++) {
+    h1 = buf1[i];
+    for(j = 0; j < buflen2; j++) {
+      h2 = buf2[j];
+
+      if(h1 == h2) {
+        lookup1 = 0;
+        if(i > 0 && j > 0) {
+          lookup1 = last_row[j - 1];
+        }
+        this_row[j] = 1 + lookup1;
+      }
+      else {
+        lookup1 = 0;
+        lookup2 = 0;
+        if(i > 0) {
+          lookup1 = last_row[j];
+        }
+        if(j > 0) {
+          lookup2 = this_row[j - 1];
+        }
+        this_row[j] = (lookup1 > lookup2) ? lookup1 : lookup2;
+      }
+
+      swap = this_row;
+      this_row = last_row;
+      last_row = swap;
+    }
+  }
+
+  result = last_row[buflen2 - 1];
+  free(this_row);
+  free(last_row);
+  return result;
+}
+
+size_t hashlen(hash_t *hash) {
+  size_t i = 0;
+  while(hash[i] != 0) {
+    ++i;
+  }
+  return i;
+}
+
 int main(int argc, char **argv)
 {
+  size_t i, j, len1, len2;
+  unsigned long length;
   int ch, count;
   hash_t **hashes;
   char **filenames;
@@ -130,6 +211,16 @@ int main(int argc, char **argv)
   }
   filenames = argv + optind;
   hash_files((const char *const*) filenames, hashes, count);
+
+  for(i = 0; i < count; i++) {
+    len1 = hashlen(hashes[i]);
+    for(j = i + 1; j < count; j++) {
+      len2 = hashlen(hashes[j]);
+      length = lcs_length(hashes[i], len1, hashes[j], len2);
+
+      printf("%lu %s %s\n", length, filenames[i], filenames[j]);
+    }
+  }
 
   free(hashes);
   exit(EXIT_SUCCESS);
