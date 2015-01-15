@@ -105,7 +105,7 @@ lcs_length(hash_t *buf1, size_t buflen1, hash_t *buf2, size_t buflen2)
   unsigned long *swap, *this_row, *last_row, lookup1, lookup2, result;
   hash_t h1, h2;
 
-  if(buf1[0] == 0 && buf2[0] == 0) {
+  if(buflen1 == 0 || buflen2 == 0) {
     return 0;
   }
 
