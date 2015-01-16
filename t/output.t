@@ -11,6 +11,12 @@ test_expect_success 'empty file' "
   test_cmp expected actual
 "
 
+test_expect_success 'empty file -n' "
+  echo '0.000 $F/empty.txt $F/empty.txt' >expected &&
+  txtcmp -n $F/empty.txt $F/empty.txt >actual &&
+  test_cmp expected actual
+"
+
 test_expect_success 'empty file and non-empty file' "
   echo '0 $F/one.txt $F/empty.txt' >expected &&
   txtcmp $F/one.txt $F/empty.txt >actual &&
@@ -29,6 +35,12 @@ test_expect_success 'one line and two line file' "
   test_cmp expected actual
 "
 
+test_expect_success 'one line and two line file -n' "
+  echo '1.000 $F/one.txt $F/two.txt' >expected &&
+  txtcmp -n $F/one.txt $F/two.txt >actual &&
+  test_cmp expected actual
+"
+
 test_expect_success 'multiple files' "
   cat <<EOF >expected &&
 1 $F/one.txt $F/two.txt
@@ -36,6 +48,14 @@ test_expect_success 'multiple files' "
 2 $F/two.txt $F/three.txt
 EOF
   txtcmp $F/one.txt $F/two.txt $F/three.txt >actual &&
+  test_cmp expected actual
+"
+
+test_expect_success 'partial normalized' "
+  cat <<EOF >expected &&
+0.333 $F/animals1.txt $F/animals2.txt
+EOF
+  txtcmp -n $F/animals1.txt $F/animals2.txt >actual &&
   test_cmp expected actual
 "
 

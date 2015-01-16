@@ -8,11 +8,14 @@
 
 typedef unsigned long hash_t;
 
+static char opt_normalize = 0;
+
 static void print_usage(FILE *fp, const char *arg0)
 {
   fprintf(fp,
     "Usage: %s file1 [file2...]\n"
     "Options:\n"
+    " -n     Normalize LCS lengths\n"
     " -h     Print this message\n"
     " -v     Print the version\n"
     , arg0);
@@ -183,7 +186,7 @@ int main(int argc, char **argv)
   hash_t **hashes;
   char **filenames;
 
-  while((ch = getopt(argc, argv, "hv")) != -1) {
+  while((ch = getopt(argc, argv, "nhv")) != -1) {
     switch(ch) {
       case 'v':
         printf(PROG " " VERSION "\n");
@@ -191,6 +194,9 @@ int main(int argc, char **argv)
       case 'h':
         print_usage(stdout, argv[0]);
         exit(EXIT_SUCCESS);
+      case 'n':
+        opt_normalize = 1;
+        continue;
       case '?':
       default:
         print_usage(stderr, argv[0]);
@@ -217,10 +223,22 @@ int main(int argc, char **argv)
       len2 = hashlen(hashes[j]);
       length = lcs_length(hashes[i], len1, hashes[j], len2);
 
-      printf("%lu %s %s\n", length, filenames[i], filenames[j]);
+      if(!opt_normalize) {
+        printf("%lu %s %s\n", length, filenames[i], filenames[j]);
+      }
+      else {
+        float rank = 0.f;
+        size_t minlen;
+
+        minlen = (len1 < len2) ? len1 : len2;
+        if(minlen > 0) {
+          rank = length / ((float)  minlen);
+        }
+
+        printf("%.3f %s %s\n", rank, filenames[i], filenames[j]);
+      }
     }
   }
-
 
   for(i = 0; i < count; i++) {
     free(hashes[i]);
