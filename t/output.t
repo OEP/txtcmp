@@ -59,4 +59,20 @@ EOF
   test_cmp expected actual
 "
 
+test_expect_success 'spaces are normally honored' "
+  cat <<EOF >expected &&
+1 $F/numbers.txt $F/numbers_spaced.txt
+EOF
+  txtcmp $F/numbers.txt $F/numbers_spaced.txt >actual &&
+  test_cmp expected actual
+"
+
+test_expect_success 'spaces trimmed from ends with -t' "
+  cat <<EOF >expected &&
+2 $F/numbers.txt $F/numbers_spaced.txt
+EOF
+  txtcmp -t $F/numbers.txt $F/numbers_spaced.txt >actual &&
+  test_cmp expected actual
+"
+
 test_done

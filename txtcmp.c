@@ -2,19 +2,22 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <errno.h>
-#include <assert.h>
+#include <ctype.h>
 #define PROG "txtcmp"
 #define VERSION "0.1.0"
 
 typedef unsigned long hash_t;
 
+// Options set by command line flags.
 static char opt_normalize = 0;
+static char opt_trim = 0;
 
 static void print_usage(FILE *fp, const char *arg0)
 {
   fprintf(fp,
     "Usage: %s file1 [file2...]\n"
     "Options:\n"
+    " -t     Trim whitespace from ends of lines\n"
     " -n     Normalize LCS lengths\n"
     " -h     Print this message\n"
     " -v     Print the version\n"
@@ -41,7 +44,7 @@ hash_string(const char* str)
 static void
 hash_file(FILE *fp, hash_t **buffer)
 {
-  char *line = NULL;
+  char *line = NULL, *linestart = NULL;
   size_t linecap = 0, linecount = 0, lineguess = 100;
   ssize_t linelen;
 
@@ -53,6 +56,19 @@ hash_file(FILE *fp, hash_t **buffer)
   errno = 0;
   while((linelen = getline(&line, &linecap, fp)) > 0) {
     ++linecount;
+    linestart = line;
+
+    // Trim whitespace
+    if(opt_trim) {
+      while(isspace(*linestart)) {
+        ++linestart;
+        --linelen;
+      }
+      while(isspace(linestart[linelen - 1])) {
+        --linelen;
+      }
+      linestart[linelen] = '\0';
+    }
 
     // Rellocate memory if we have underestimated the file line count.
     if(linecount > lineguess) {
@@ -63,7 +79,7 @@ hash_file(FILE *fp, hash_t **buffer)
       }
     }
 
-    (*buffer)[linecount-1] = hash_string(line);
+    (*buffer)[linecount-1] = hash_string(linestart);
     errno = 0;
   }
   if(errno != 0) {
@@ -186,7 +202,7 @@ int main(int argc, char **argv)
   hash_t **hashes;
   char **filenames;
 
-  while((ch = getopt(argc, argv, "nhv")) != -1) {
+  while((ch = getopt(argc, argv, "tnhv")) != -1) {
     switch(ch) {
       case 'v':
         printf(PROG " " VERSION "\n");
@@ -196,6 +212,9 @@ int main(int argc, char **argv)
         exit(EXIT_SUCCESS);
       case 'n':
         opt_normalize = 1;
+        continue;
+      case 't':
+        opt_trim = 1;
         continue;
       case '?':
       default:
