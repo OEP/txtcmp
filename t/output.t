@@ -107,4 +107,20 @@ EOF
   test_cmp expected actual
 "
 
+test_expect_success 'whitespace ignored with -s' "
+  cat <<EOF >expected &&
+4 $F/numbers.txt $F/numbers_spaced.txt
+EOF
+  txtcmp -s $F/numbers.txt $F/numbers_spaced.txt >actual &&
+  test_cmp expected actual
+"
+
+test_expect_success 'whitespace ignored with -bs' "
+  cat <<EOF >expected &&
+4 $F/numbers.txt $F/numbers_spaced.txt
+EOF
+  txtcmp -bs $F/numbers.txt $F/numbers_spaced.txt >actual &&
+  test_cmp expected actual
+"
+
 test_done

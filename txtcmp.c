@@ -12,6 +12,7 @@ typedef unsigned long hash_t;
 static char opt_normalize = 0;
 static char opt_trim = 0;
 static char opt_ignore_blanks = 0;
+static char opt_ignore_whitespace = 0;
 
 static void print_usage(FILE *fp, const char *arg0)
 {
@@ -19,6 +20,7 @@ static void print_usage(FILE *fp, const char *arg0)
     "Usage: %s file1 [file2...]\n"
     "Options:\n"
     " -b     Ignore blank lines\n"
+    " -s     Ignore whitespace altogether\n"
     " -t     Trim whitespace from ends of lines\n"
     " -n     Normalize LCS lengths\n"
     " -h     Print this message\n"
@@ -34,6 +36,8 @@ hash_string(const char* str)
 
   // sdbm hash function
   while((c = *str++)) {
+    if(opt_ignore_whitespace && isspace(c))
+      continue;
     hash = c + (hash << 6) + (hash << 16) - hash;
   }
 
@@ -215,7 +219,7 @@ int main(int argc, char **argv)
   hash_t **hashes;
   char **filenames;
 
-  while((ch = getopt(argc, argv, "btnhv")) != -1) {
+  while((ch = getopt(argc, argv, "bstnhv")) != -1) {
     switch(ch) {
       case 'v':
         printf(PROG " " VERSION "\n");
@@ -225,6 +229,9 @@ int main(int argc, char **argv)
         exit(EXIT_SUCCESS);
       case 'b':
         opt_ignore_blanks = 1;
+        continue;
+      case 's':
+        opt_ignore_whitespace = 1;
         continue;
       case 'n':
         opt_normalize = 1;
