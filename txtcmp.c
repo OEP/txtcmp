@@ -11,12 +11,14 @@ typedef unsigned long hash_t;
 // Options set by command line flags.
 static char opt_normalize = 0;
 static char opt_trim = 0;
+static char opt_ignore_blanks = 0;
 
 static void print_usage(FILE *fp, const char *arg0)
 {
   fprintf(fp,
     "Usage: %s file1 [file2...]\n"
     "Options:\n"
+    " -b     Ignore blank lines\n"
     " -t     Trim whitespace from ends of lines\n"
     " -n     Normalize LCS lengths\n"
     " -h     Print this message\n"
@@ -68,6 +70,17 @@ hash_file(FILE *fp, hash_t **buffer)
         --linelen;
       }
       linestart[linelen] = '\0';
+    }
+
+    // Ignore the line if it is blank
+    if(opt_ignore_blanks && (
+        (linestart[0] == '\r' && linestart[1] == '\n') ||
+        linestart[0] == '\n' ||
+        linestart[0] == '\0'
+      )
+    ) {
+      --linecount;
+      continue;
     }
 
     // Rellocate memory if we have underestimated the file line count.
@@ -202,7 +215,7 @@ int main(int argc, char **argv)
   hash_t **hashes;
   char **filenames;
 
-  while((ch = getopt(argc, argv, "tnhv")) != -1) {
+  while((ch = getopt(argc, argv, "btnhv")) != -1) {
     switch(ch) {
       case 'v':
         printf(PROG " " VERSION "\n");
@@ -210,6 +223,9 @@ int main(int argc, char **argv)
       case 'h':
         print_usage(stdout, argv[0]);
         exit(EXIT_SUCCESS);
+      case 'b':
+        opt_ignore_blanks = 1;
+        continue;
       case 'n':
         opt_normalize = 1;
         continue;

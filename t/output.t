@@ -83,4 +83,28 @@ EOF
   test_cmp expected actual
 "
 
+test_expect_success 'using -b ignores empty lines' "
+  cat <<EOF >expected &&
+4 $F/numbers_blanks.txt $F/numbers_blanks.txt
+EOF
+  txtcmp -b $F/numbers_blanks.txt $F/numbers_blanks.txt >actual &&
+  test_cmp expected actual
+"
+
+test_expect_success 'using -bt ignores empty lines' "
+  cat <<EOF >expected &&
+4 $F/numbers_blanks.txt $F/numbers_blanks.txt
+EOF
+  txtcmp -bt $F/numbers_blanks.txt $F/numbers_blanks.txt >actual &&
+  test_cmp expected actual
+"
+
+test_expect_success 'using -b with dos newlines' "
+  cat <<EOF >expected &&
+4 $F/numbers_blanks_dos.txt $F/numbers_blanks_dos.txt
+EOF
+  txtcmp -b $F/numbers_blanks_dos.txt $F/numbers_blanks_dos.txt >actual &&
+  test_cmp expected actual
+"
+
 test_done
