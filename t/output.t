@@ -75,4 +75,12 @@ EOF
   test_cmp expected actual
 "
 
+test_expect_success 'using -t with empty lines' "
+  cat <<EOF >expected &&
+4 $F/numbers.txt $F/numbers_blanks.txt
+EOF
+  txtcmp -t $F/numbers.txt $F/numbers_blanks.txt >actual &&
+  test_cmp expected actual
+"
+
 test_done
