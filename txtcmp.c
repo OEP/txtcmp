@@ -17,7 +17,7 @@ static char opt_ignore_whitespace = 0;
 static void print_usage(FILE *fp, const char *arg0)
 {
   fprintf(fp,
-    "Usage: %s file1 [file2...]\n"
+    "Usage: %s [options] file1 [file2...]\n"
     "Options:\n"
     " -b     Ignore blank lines\n"
     " -s     Ignore whitespace altogether\n"
