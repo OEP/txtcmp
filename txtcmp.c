@@ -4,7 +4,7 @@
 #include <errno.h>
 #include <ctype.h>
 #define PROG "txtcmp"
-#define VERSION "0.2.0"
+#define VERSION "0.2.1"
 
 typedef unsigned long hash_t;
 
