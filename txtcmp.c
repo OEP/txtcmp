@@ -2,17 +2,27 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <errno.h>
-#include <assert.h>
+#include <ctype.h>
 #define PROG "txtcmp"
-#define VERSION "0.1.0"
+#define VERSION "0.2.0"
 
 typedef unsigned long hash_t;
+
+// Options set by command line flags.
+static char opt_normalize = 0;
+static char opt_trim = 0;
+static char opt_ignore_blanks = 0;
+static char opt_ignore_whitespace = 0;
 
 static void print_usage(FILE *fp, const char *arg0)
 {
   fprintf(fp,
-    "Usage: %s file1 [file2...]\n"
+    "Usage: %s [options] file1 [file2...]\n"
     "Options:\n"
+    " -b     Ignore blank lines\n"
+    " -s     Ignore whitespace altogether\n"
+    " -t     Trim whitespace from ends of lines\n"
+    " -n     Normalize LCS lengths\n"
     " -h     Print this message\n"
     " -v     Print the version\n"
     , arg0);
@@ -26,6 +36,8 @@ hash_string(const char* str)
 
   // sdbm hash function
   while((c = *str++)) {
+    if(opt_ignore_whitespace && isspace(c))
+      continue;
     hash = c + (hash << 6) + (hash << 16) - hash;
   }
 
@@ -38,7 +50,7 @@ hash_string(const char* str)
 static void
 hash_file(FILE *fp, hash_t **buffer)
 {
-  char *line = NULL;
+  char *line = NULL, *linestart = NULL;
   size_t linecap = 0, linecount = 0, lineguess = 100;
   ssize_t linelen;
 
@@ -50,6 +62,30 @@ hash_file(FILE *fp, hash_t **buffer)
   errno = 0;
   while((linelen = getline(&line, &linecap, fp)) > 0) {
     ++linecount;
+    linestart = line;
+
+    // Trim whitespace
+    if(opt_trim) {
+      while(isspace(*linestart)) {
+        ++linestart;
+        --linelen;
+      }
+      while(isspace(linestart[linelen - 1])) {
+        --linelen;
+      }
+      linestart[linelen] = '\0';
+    }
+
+    // Ignore the line if it is blank
+    if(opt_ignore_blanks && (
+        (linestart[0] == '\r' && linestart[1] == '\n') ||
+        linestart[0] == '\n' ||
+        linestart[0] == '\0'
+      )
+    ) {
+      --linecount;
+      continue;
+    }
 
     // Rellocate memory if we have underestimated the file line count.
     if(linecount > lineguess) {
@@ -60,7 +96,7 @@ hash_file(FILE *fp, hash_t **buffer)
       }
     }
 
-    (*buffer)[linecount-1] = hash_string(line);
+    (*buffer)[linecount-1] = hash_string(linestart);
     errno = 0;
   }
   if(errno != 0) {
@@ -183,7 +219,7 @@ int main(int argc, char **argv)
   hash_t **hashes;
   char **filenames;
 
-  while((ch = getopt(argc, argv, "hv")) != -1) {
+  while((ch = getopt(argc, argv, "bstnhv")) != -1) {
     switch(ch) {
       case 'v':
         printf(PROG " " VERSION "\n");
@@ -191,6 +227,18 @@ int main(int argc, char **argv)
       case 'h':
         print_usage(stdout, argv[0]);
         exit(EXIT_SUCCESS);
+      case 'b':
+        opt_ignore_blanks = 1;
+        continue;
+      case 's':
+        opt_ignore_whitespace = 1;
+        continue;
+      case 'n':
+        opt_normalize = 1;
+        continue;
+      case 't':
+        opt_trim = 1;
+        continue;
       case '?':
       default:
         print_usage(stderr, argv[0]);
@@ -217,10 +265,22 @@ int main(int argc, char **argv)
       len2 = hashlen(hashes[j]);
       length = lcs_length(hashes[i], len1, hashes[j], len2);
 
-      printf("%lu %s %s\n", length, filenames[i], filenames[j]);
+      if(!opt_normalize) {
+        printf("%lu %s %s\n", length, filenames[i], filenames[j]);
+      }
+      else {
+        float rank = 0.f;
+        size_t minlen;
+
+        minlen = (len1 < len2) ? len1 : len2;
+        if(minlen > 0) {
+          rank = length / ((float)  minlen);
+        }
+
+        printf("%.3f %s %s\n", rank, filenames[i], filenames[j]);
+      }
     }
   }
-
 
   for(i = 0; i < count; i++) {
     free(hashes[i]);
