@@ -1,6 +1,8 @@
 txtcmp
 ======
 
+[![Build Status](https://travis-ci.org/OEP/txtcmp.svg?branch=master)](https://travis-ci.org/OEP/txtcmp)
+
 `txtcmp` is tool for finding similar text files. It is meant for the case where
 you have many files and a few may be similar. It works by computing the longest
 common subsequence (LCS) of all provided files, which is what is at work in
