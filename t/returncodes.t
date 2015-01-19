@@ -29,4 +29,10 @@ test_expect_success 'nonexistent file failure' '
   test_cmp expected actual
 '
 
+test_expect_success 'opening a directory fails' '
+  mkdir mydir &&
+  touch myfile &&
+  test_must_fail txtcmp mydir myfile
+'
+
 test_done
