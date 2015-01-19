@@ -30,9 +30,11 @@ test_expect_success 'nonexistent file failure' '
 '
 
 test_expect_success 'opening a directory fails' '
+  echo "mydir: Is a directory" >expected &&
   mkdir mydir &&
   touch myfile &&
-  test_must_fail txtcmp mydir myfile
+  test_must_fail txtcmp mydir myfile 2>actual &&
+  test_cmp expected actual
 '
 
 test_done

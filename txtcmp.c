@@ -63,7 +63,7 @@ hash_string(const char* str)
 }
 
 static void
-hash_file(FILE *fp, hash_t **buffer)
+hash_file(const char *filename, FILE *fp, hash_t **buffer)
 {
   char *line = NULL, *linestart = NULL;
   size_t linecap = 0, linecount = 0, lineguess = TXTCMP_LENGTH_GUESS;
@@ -113,7 +113,7 @@ hash_file(FILE *fp, hash_t **buffer)
     (*buffer)[linecount-1] = hash_string(linestart);
   }
   if(ferror(fp)) {
-    perror("getline()");
+    perror(filename);
     exit(EXIT_FAILURE);
   }
 
@@ -135,14 +135,15 @@ static void
 hash_files(const char *const* filenames, hash_t **hashes, size_t length)
 {
   size_t i;
+  FILE *fp = NULL;
 
   for(i = 0; i < length; ++i) {
-    FILE *fp = fopen(filenames[i], "r");
-    if(fp == NULL) {
+    if((fp = fopen(filenames[i], "r")) == NULL) {
       perror(filenames[i]);
       exit(EXIT_FAILURE);
     }
-    hash_file(fp, &hashes[i]);
+
+    hash_file(filenames[i], fp, &hashes[i]);
     fclose(fp);
   }
 }
