@@ -59,7 +59,6 @@ hash_file(FILE *fp, hash_t **buffer)
     exit(EXIT_FAILURE);
   }
 
-  errno = 0;
   while((linelen = getline(&line, &linecap, fp)) > 0) {
     ++linecount;
     linestart = line;
@@ -97,9 +96,8 @@ hash_file(FILE *fp, hash_t **buffer)
     }
 
     (*buffer)[linecount-1] = hash_string(linestart);
-    errno = 0;
   }
-  if(errno != 0) {
+  if(ferror(fp)) {
     perror("getline()");
     exit(EXIT_FAILURE);
   }
