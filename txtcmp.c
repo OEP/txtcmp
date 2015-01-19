@@ -54,7 +54,7 @@ hash_file(FILE *fp, hash_t **buffer)
   size_t linecap = 0, linecount = 0, lineguess = 100;
   ssize_t linelen;
 
-  if((*buffer = malloc(lineguess * sizeof(hash_t))) == NULL) {
+  if((*buffer = malloc(lineguess * sizeof(**buffer))) == NULL) {
     perror("malloc()");
     exit(EXIT_FAILURE);
   }
@@ -90,7 +90,7 @@ hash_file(FILE *fp, hash_t **buffer)
     // Rellocate memory if we have underestimated the file line count.
     if(linecount > lineguess) {
       lineguess *= 2;
-      if((*buffer = realloc(*buffer, lineguess * sizeof(hash_t))) == NULL) {
+      if((*buffer = realloc(*buffer, lineguess * sizeof(**buffer))) == NULL) {
         perror("realloc()");
         exit(EXIT_FAILURE);
       }
@@ -105,7 +105,7 @@ hash_file(FILE *fp, hash_t **buffer)
   }
 
   // Shrink the buffer down to the actual file length.
-  if((*buffer = realloc(*buffer, (linecount + 1) * sizeof(hash_t))) == NULL) {
+  if((*buffer = realloc(*buffer, (linecount + 1) * sizeof(**buffer))) == NULL) {
     perror("realloc()");
     exit(EXIT_FAILURE);
   }
@@ -158,12 +158,12 @@ lcs_length(hash_t *buf1, size_t buflen1, hash_t *buf2, size_t buflen2)
     buflen2 = tmplen;
   }
 
-  if((this_row = malloc(buflen2 * sizeof(unsigned long))) == NULL) {
+  if((this_row = malloc(buflen2 * sizeof(*this_row))) == NULL) {
     perror("malloc()");
     exit(EXIT_FAILURE);
   }
 
-  if((last_row = malloc(buflen2 * sizeof(unsigned long))) == NULL) {
+  if((last_row = malloc(buflen2 * sizeof(*last_row))) == NULL) {
     perror("malloc()");
     exit(EXIT_FAILURE);
   }
@@ -252,7 +252,7 @@ int main(int argc, char **argv)
     exit(EXIT_FAILURE);
   }
 
-  if((hashes = malloc(count * sizeof(hash_t*))) == NULL) {
+  if((hashes = malloc(count * sizeof(*hashes))) == NULL) {
     perror("malloc()");
     exit(EXIT_FAILURE);
   }
