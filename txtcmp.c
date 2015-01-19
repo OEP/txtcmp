@@ -1,10 +1,25 @@
+#define PROG "txtcmp"
+#define VERSION "0.2.1"
+
+#ifndef TXTCMP_LENGTH_GUESS
+# define TXTCMP_LENGTH_GUESS 100
+#endif
+#if TXTCMP_LENGTH_GUESS < 1
+# error "TXTCMP_LENGTH_GUESS should be >= 1"
+#endif
+
+#ifndef TXTCMP_REALLOC_FACTOR
+# define TXTCMP_REALLOC_FACTOR 2
+#endif
+#if TXTCMP_REALLOC_FACTOR < 2
+# error "TXTCMP_REALLOC_FACTOR should be >= 2"
+#endif
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <errno.h>
 #include <ctype.h>
-#define PROG "txtcmp"
-#define VERSION "0.2.1"
 
 typedef unsigned long hash_t;
 
@@ -51,7 +66,7 @@ static void
 hash_file(FILE *fp, hash_t **buffer)
 {
   char *line = NULL, *linestart = NULL;
-  size_t linecap = 0, linecount = 0, lineguess = 100;
+  size_t linecap = 0, linecount = 0, lineguess = TXTCMP_LENGTH_GUESS;
   ssize_t linelen;
 
   if((*buffer = malloc(lineguess * sizeof(**buffer))) == NULL) {
@@ -88,7 +103,7 @@ hash_file(FILE *fp, hash_t **buffer)
 
     // Rellocate memory if we have underestimated the file line count.
     if(linecount > lineguess) {
-      lineguess *= 2;
+      lineguess *= TXTCMP_REALLOC_FACTOR;
       if((*buffer = realloc(*buffer, lineguess * sizeof(**buffer))) == NULL) {
         perror("realloc()");
         exit(EXIT_FAILURE);
