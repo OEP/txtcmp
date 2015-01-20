@@ -51,8 +51,6 @@ hash_string(const char* str)
 
   // sdbm hash function
   while((c = *str++)) {
-    if(opt_ignore_whitespace && isspace(c))
-      continue;
     hash = c + (hash << 6) + (hash << 16) - hash;
   }
 
@@ -87,6 +85,24 @@ hash_file(const char *filename, FILE *fp, hash_t **buffer)
       while(isspace(linestart[linelen - 1])) {
         --linelen;
       }
+      linestart[linelen] = '\0';
+    }
+
+    // Strip all whitespace in-place.
+    if(opt_ignore_whitespace) {
+      size_t i, imax = linelen;
+      char *insert = linestart;
+
+      for(i = 0; i < imax; ++i) {
+        if(!isspace(linestart[i])) {
+          *insert = linestart[i];
+          ++insert;
+        }
+        else {
+          --linelen;
+        }
+      }
+
       linestart[linelen] = '\0';
     }
 
