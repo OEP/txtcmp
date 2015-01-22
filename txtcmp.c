@@ -1,5 +1,5 @@
 #define PROG "txtcmp"
-#define VERSION "0.2.1"
+#define VERSION "0.2.2"
 
 #ifndef TXTCMP_LENGTH_GUESS
 # define TXTCMP_LENGTH_GUESS 100
