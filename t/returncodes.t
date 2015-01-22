@@ -24,13 +24,13 @@ test_expect_success 'one positional arg fails' '
 '
 
 test_expect_success 'nonexistent file failure' '
-  echo "notexist1: No such file or directory" >expected &&
+  echo "txtcmp: notexist1: No such file or directory" >expected &&
   test_must_fail txtcmp notexist1 notexist2 2>actual &&
   test_cmp expected actual
 '
 
 test_expect_success 'opening a directory fails' '
-  echo "mydir: Is a directory" >expected &&
+  echo "txtcmp: mydir: Is a directory" >expected &&
   mkdir mydir &&
   touch myfile &&
   test_must_fail txtcmp mydir myfile 2>actual &&

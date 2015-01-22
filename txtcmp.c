@@ -29,6 +29,18 @@ static char opt_trim = 0;
 static char opt_ignore_blanks = 0;
 static char opt_ignore_whitespace = 0;
 
+static void
+xperror(const char *msg)
+{
+  if(msg == NULL) {
+    perror(PROG);
+  }
+  else {
+    fprintf(stderr, PROG ": ");
+    perror(msg);
+  }
+}
+
 static void print_usage(FILE *fp, const char *arg0)
 {
   fprintf(fp,
@@ -68,7 +80,7 @@ hash_file(const char *filename, FILE *fp, hash_t **buffer)
   ssize_t linelen;
 
   if((*buffer = malloc(lineguess * sizeof(**buffer))) == NULL) {
-    perror("malloc()");
+    xperror("malloc()");
     exit(EXIT_FAILURE);
   }
 
@@ -121,7 +133,7 @@ hash_file(const char *filename, FILE *fp, hash_t **buffer)
     if(linecount > lineguess) {
       lineguess *= TXTCMP_REALLOC_FACTOR;
       if((*buffer = realloc(*buffer, lineguess * sizeof(**buffer))) == NULL) {
-        perror("realloc()");
+        xperror("realloc()");
         exit(EXIT_FAILURE);
       }
     }
@@ -129,13 +141,13 @@ hash_file(const char *filename, FILE *fp, hash_t **buffer)
     (*buffer)[linecount-1] = hash_string(linestart);
   }
   if(ferror(fp)) {
-    perror(filename);
+    xperror(filename);
     exit(EXIT_FAILURE);
   }
 
   // Shrink the buffer down to the actual file length.
   if((*buffer = realloc(*buffer, (linecount + 1) * sizeof(**buffer))) == NULL) {
-    perror("realloc()");
+    xperror("realloc()");
     exit(EXIT_FAILURE);
   }
 
@@ -155,7 +167,7 @@ hash_files(const char *const* filenames, hash_t **hashes, size_t length)
 
   for(i = 0; i < length; ++i) {
     if((fp = fopen(filenames[i], "r")) == NULL) {
-      perror(filenames[i]);
+      xperror(filenames[i]) ;
       exit(EXIT_FAILURE);
     }
 
@@ -189,12 +201,12 @@ lcs_length(hash_t *buf1, size_t buflen1, hash_t *buf2, size_t buflen2)
   }
 
   if((this_row = malloc(buflen2 * sizeof(*this_row))) == NULL) {
-    perror("malloc()");
+    xperror("malloc()");
     exit(EXIT_FAILURE);
   }
 
   if((last_row = malloc(buflen2 * sizeof(*last_row))) == NULL) {
-    perror("malloc()");
+    xperror("malloc()");
     exit(EXIT_FAILURE);
   }
 
@@ -283,7 +295,7 @@ int main(int argc, char **argv)
   }
 
   if((hashes = malloc(count * sizeof(*hashes))) == NULL) {
-    perror("malloc()");
+    xperror("malloc()");
     exit(EXIT_FAILURE);
   }
   filenames = argv + optind;
