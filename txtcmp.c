@@ -1,10 +1,25 @@
+#define PROG "txtcmp"
+#define VERSION "0.2.2"
+
+#ifndef TXTCMP_LENGTH_GUESS
+# define TXTCMP_LENGTH_GUESS 100
+#endif
+#if TXTCMP_LENGTH_GUESS < 1
+# error "TXTCMP_LENGTH_GUESS should be >= 1"
+#endif
+
+#ifndef TXTCMP_REALLOC_FACTOR
+# define TXTCMP_REALLOC_FACTOR 2
+#endif
+#if TXTCMP_REALLOC_FACTOR < 2
+# error "TXTCMP_REALLOC_FACTOR should be >= 2"
+#endif
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <errno.h>
 #include <ctype.h>
-#define PROG "txtcmp"
-#define VERSION "0.2.1"
 
 typedef unsigned long hash_t;
 
@@ -14,10 +29,22 @@ static char opt_trim = 0;
 static char opt_ignore_blanks = 0;
 static char opt_ignore_whitespace = 0;
 
+static void
+xperror(const char *msg)
+{
+  if(msg == NULL) {
+    perror(PROG);
+  }
+  else {
+    fprintf(stderr, PROG ": ");
+    perror(msg);
+  }
+}
+
 static void print_usage(FILE *fp, const char *arg0)
 {
   fprintf(fp,
-    "Usage: %s [options] file1 [file2...]\n"
+    "Usage: %s [options] file1 file2...\n"
     "Options:\n"
     " -b     Ignore blank lines\n"
     " -s     Ignore whitespace altogether\n"
@@ -36,8 +63,6 @@ hash_string(const char* str)
 
   // sdbm hash function
   while((c = *str++)) {
-    if(opt_ignore_whitespace && isspace(c))
-      continue;
     hash = c + (hash << 6) + (hash << 16) - hash;
   }
 
@@ -48,18 +73,17 @@ hash_string(const char* str)
 }
 
 static void
-hash_file(FILE *fp, hash_t **buffer)
+hash_file(const char *filename, FILE *fp, hash_t **buffer)
 {
   char *line = NULL, *linestart = NULL;
-  size_t linecap = 0, linecount = 0, lineguess = 100;
+  size_t linecap = 0, linecount = 0, lineguess = TXTCMP_LENGTH_GUESS;
   ssize_t linelen;
 
-  if((*buffer = malloc(lineguess * sizeof(hash_t))) == NULL) {
-    perror("malloc()");
+  if((*buffer = malloc(lineguess * sizeof(**buffer))) == NULL) {
+    xperror("malloc()");
     exit(EXIT_FAILURE);
   }
 
-  errno = 0;
   while((linelen = getline(&line, &linecap, fp)) > 0) {
     ++linecount;
     linestart = line;
@@ -76,6 +100,24 @@ hash_file(FILE *fp, hash_t **buffer)
       linestart[linelen] = '\0';
     }
 
+    // Strip all whitespace in-place.
+    if(opt_ignore_whitespace) {
+      size_t i, imax = linelen;
+      char *insert = linestart;
+
+      for(i = 0; i < imax; ++i) {
+        if(!isspace(linestart[i])) {
+          *insert = linestart[i];
+          ++insert;
+        }
+        else {
+          --linelen;
+        }
+      }
+
+      linestart[linelen] = '\0';
+    }
+
     // Ignore the line if it is blank
     if(opt_ignore_blanks && (
         (linestart[0] == '\r' && linestart[1] == '\n') ||
@@ -89,24 +131,23 @@ hash_file(FILE *fp, hash_t **buffer)
 
     // Rellocate memory if we have underestimated the file line count.
     if(linecount > lineguess) {
-      lineguess *= 2;
-      if((*buffer = realloc(*buffer, lineguess * sizeof(hash_t))) == NULL) {
-        perror("realloc()");
+      lineguess *= TXTCMP_REALLOC_FACTOR;
+      if((*buffer = realloc(*buffer, lineguess * sizeof(**buffer))) == NULL) {
+        xperror("realloc()");
         exit(EXIT_FAILURE);
       }
     }
 
     (*buffer)[linecount-1] = hash_string(linestart);
-    errno = 0;
   }
-  if(errno != 0) {
-    perror("getline()");
+  if(ferror(fp)) {
+    xperror(filename);
     exit(EXIT_FAILURE);
   }
 
   // Shrink the buffer down to the actual file length.
-  if((*buffer = realloc(*buffer, (linecount + 1) * sizeof(hash_t))) == NULL) {
-    perror("realloc()");
+  if((*buffer = realloc(*buffer, (linecount + 1) * sizeof(**buffer))) == NULL) {
+    xperror("realloc()");
     exit(EXIT_FAILURE);
   }
 
@@ -122,14 +163,15 @@ static void
 hash_files(const char *const* filenames, hash_t **hashes, size_t length)
 {
   size_t i;
+  FILE *fp = NULL;
 
   for(i = 0; i < length; ++i) {
-    FILE *fp = fopen(filenames[i], "r");
-    if(fp == NULL) {
-      perror(filenames[i]);
+    if((fp = fopen(filenames[i], "r")) == NULL) {
+      xperror(filenames[i]) ;
       exit(EXIT_FAILURE);
     }
-    hash_file(fp, &hashes[i]);
+
+    hash_file(filenames[i], fp, &hashes[i]);
     fclose(fp);
   }
 }
@@ -158,13 +200,13 @@ lcs_length(hash_t *buf1, size_t buflen1, hash_t *buf2, size_t buflen2)
     buflen2 = tmplen;
   }
 
-  if((this_row = malloc(buflen2 * sizeof(unsigned long))) == NULL) {
-    perror("malloc()");
+  if((this_row = malloc(buflen2 * sizeof(*this_row))) == NULL) {
+    xperror("malloc()");
     exit(EXIT_FAILURE);
   }
 
-  if((last_row = malloc(buflen2 * sizeof(unsigned long))) == NULL) {
-    perror("malloc()");
+  if((last_row = malloc(buflen2 * sizeof(*last_row))) == NULL) {
+    xperror("malloc()");
     exit(EXIT_FAILURE);
   }
 
@@ -252,8 +294,8 @@ int main(int argc, char **argv)
     exit(EXIT_FAILURE);
   }
 
-  if((hashes = malloc(count * sizeof(hash_t*))) == NULL) {
-    perror("malloc()");
+  if((hashes = malloc(count * sizeof(*hashes))) == NULL) {
+    xperror("malloc()");
     exit(EXIT_FAILURE);
   }
   filenames = argv + optind;
