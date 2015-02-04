@@ -200,37 +200,27 @@ lcs_length(hash_t *buf1, size_t buflen1, hash_t *buf2, size_t buflen2)
     buflen2 = tmplen;
   }
 
-  if((this_row = malloc(buflen2 * sizeof(*this_row))) == NULL) {
-    xperror("malloc()");
+  if((this_row = calloc(buflen2 + 1, sizeof(*this_row))) == NULL) {
+    xperror("calloc()");
     exit(EXIT_FAILURE);
   }
 
-  if((last_row = malloc(buflen2 * sizeof(*last_row))) == NULL) {
-    xperror("malloc()");
+  if((last_row = calloc(buflen2 + 1, sizeof(*last_row))) == NULL) {
+    xperror("calloc()");
     exit(EXIT_FAILURE);
   }
 
-  for(i = 0; i < buflen1; i++) {
-    h1 = buf1[i];
-    for(j = 0; j < buflen2; j++) {
-      h2 = buf2[j];
+  for(i = 1; i < buflen1 + 1; i++) {
+    h1 = buf1[i-1];
+    for(j = 1; j < buflen2 + 1; j++) {
+      h2 = buf2[j-1];
 
       if(h1 == h2) {
-        lookup1 = 0;
-        if(i > 0 && j > 0) {
-          lookup1 = last_row[j - 1];
-        }
-        this_row[j] = 1 + lookup1;
+        this_row[j] = 1 + last_row[j-1];
       }
       else {
-        lookup1 = 0;
-        lookup2 = 0;
-        if(i > 0) {
-          lookup1 = last_row[j];
-        }
-        if(j > 0) {
-          lookup2 = this_row[j - 1];
-        }
+        lookup1 = last_row[j];
+        lookup2 = this_row[j-1];
         this_row[j] = (lookup1 > lookup2) ? lookup1 : lookup2;
       }
     }
@@ -239,7 +229,7 @@ lcs_length(hash_t *buf1, size_t buflen1, hash_t *buf2, size_t buflen2)
     last_row = swap;
   }
 
-  result = last_row[buflen2 - 1];
+  result = last_row[buflen2];
   free(this_row);
   free(last_row);
   return result;
