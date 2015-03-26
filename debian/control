@@ -1,0 +1,17 @@
+Source: txtcmp
+Maintainer: Paul Kilgo <paulkilgo@gmail.com>
+Section: text
+Priority: optional
+Build-Depends: debhelper
+Standards-Version: 3.9.5
+Homepage: https://github.com/OEP/txtcmp
+
+Package: txtcmp
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: utility for finding similar text files
+ txtcmp is tool for finding similar text files. It is meant for the case where
+ you have many files and a few may be similar. It works by computing the
+ longest common subsequence (LCS) of all provided files, which is what is at
+ work in utilities like diff. It is not as useful in the case where you have
+ just two files. You should use diff for that.
