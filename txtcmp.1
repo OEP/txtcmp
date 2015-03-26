@@ -1,0 +1,84 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.\" First parameter, NAME, should be all caps
+.\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
+.\" other parameters are allowed: see man(7), man(1)
+.TH TXTCMP 1 "March 2015"
+.\" Please adjust this date whenever revising the manpage.
+.\"
+.\" Some roff macros, for reference:
+.\" .nh        disable hyphenation
+.\" .hy        enable hyphenation
+.\" .ad l      left justify
+.\" .ad b      justify to both left and right margins
+.\" .nf        disable filling
+.\" .fi        enable filling
+.\" .br        insert line break
+.\" .sp <n>    insert n+1 empty lines
+.\" for manpage-specific macros, see man(7)
+.SH NAME
+txtcmp \- find similar text files
+
+.SH SYNOPSIS
+.B txtcmp
+.RI [ options ]
+file1 file2 ...
+.br
+
+.SH DESCRIPTION
+\fBtxtcmp\fP is tool for finding similar text files. It is meant for the case
+where you have many files and a few may be similar. It works by computing the
+longest common subsequence (LCS) of all provided files, which is what is at
+work in utilities like
+.BR diff (1).
+It is not as useful in the case where you have just two files. You should use
+\fBdiff\fP for that.
+
+The LCS length is traditionally used to compute a subsequence of lines two
+files have in common with each other. This can be used to create edit paths
+from one file to the next, like in \fBdiff\fP. Here, the length is output
+directly. A large LCS length usually indicates similar files, especially in
+structured text like source code.
+
+.SH OUTPUT
+\fBtxtcmp\fP will calculate an LCS length for all pairs of files you specify on
+the command line. For each pair, a line is output consisting of three
+space-delimited fields. The first field, by default, is the LCS length. The
+remaining two fields are the paths to the pair of files being compared.
+
+.SH OPTIONS
+.TP
+.B \-h
+Print full usage.
+
+.TP
+.B \-v
+Print the version.
+
+.TP
+.B \-b
+Ignore blank lines in files.
+
+.TP
+.B \-s
+Ignore all whitespace.
+
+.TP
+.B \-t
+Trim whitespace from the ends of lines.
+
+.TP
+.B \-n
+Normalize the LCS lengths to a value in the range [0, 1]. This divides the LCS
+length by the minimum length of the two files being compared. This is sometimes
+useful if you have files with very different lengths.
+
+.SH SEE ALSO
+.BR diff (1)
+
+.br
+.SH AUTHOR
+txtcmp was written by Paul Kilgo <paulkilgo@gmail.com>
+
+.SH BUGS
+Please report bugs to \fIhttps://github.com/OEP/txtcmp/issues\fP.
+.
