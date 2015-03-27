@@ -2,4 +2,9 @@ language: c
 compiler:
   - clang
   - gcc
+install: sudo apt-get install devscripts debhelper
 script: make test
+after_success:
+  - debuild -us -uc
+  - sudo dpkg -i ../txtcmp*.deb
+  - make SHARNESS_BUILD_DIRECTORY=/usr/bin test
